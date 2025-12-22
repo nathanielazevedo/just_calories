@@ -23,7 +23,9 @@ export default function WeekDetailScreen() {
     {}
   );
   const [editingDate, setEditingDate] = useState<string | null>(null);
-  const [editingField, setEditingField] = useState<'weight' | 'calories' | 'exercise' | null>(null);
+  const [editingField, setEditingField] = useState<
+    "weight" | "calories" | "exercise" | null
+  >(null);
   const [editValue, setEditValue] = useState<string>("");
 
   const loadData = useCallback(async () => {
@@ -43,21 +45,24 @@ export default function WeekDetailScreen() {
     loadData();
   }, [loadData]);
 
-  const handleSaveData = async (date: string, field: 'weight' | 'calories' | 'exercise') => {
+  const handleSaveData = async (
+    date: string,
+    field: "weight" | "calories" | "exercise"
+  ) => {
     const value = parseFloat(editValue);
     if (!isNaN(value) && value > 0) {
       const updateData: ActualWeight = { date };
-      
-      if (field === 'weight') {
+
+      if (field === "weight") {
         updateData.weight = value;
-      } else if (field === 'calories') {
+      } else if (field === "calories") {
         updateData.caloriesEaten = value;
-      } else if (field === 'exercise') {
+      } else if (field === "exercise") {
         updateData.caloriesBurnedExercise = value;
       }
-      
+
       await saveActualWeight(updateData);
-      
+
       setActualData((prev) => ({
         ...prev,
         [date]: {
@@ -71,7 +76,11 @@ export default function WeekDetailScreen() {
     setEditValue("");
   };
 
-  const startEditing = (date: string, field: 'weight' | 'calories' | 'exercise', currentValue?: number) => {
+  const startEditing = (
+    date: string,
+    field: "weight" | "calories" | "exercise",
+    currentValue?: number
+  ) => {
     setEditingDate(date);
     setEditingField(field);
     setEditValue(currentValue ? String(currentValue) : "");
@@ -105,12 +114,13 @@ export default function WeekDetailScreen() {
                 });
 
                 const renderEditableCell = (
-                  field: 'weight' | 'calories' | 'exercise',
+                  field: "weight" | "calories" | "exercise",
                   currentValue: number | undefined,
-                  unit: string = ''
+                  unit: string = ""
                 ) => {
-                  const isEditing = editingDate === dateKey && editingField === field;
-                  
+                  const isEditing =
+                    editingDate === dateKey && editingField === field;
+
                   if (isEditing) {
                     return (
                       <View style={styles.editRow}>
@@ -139,27 +149,35 @@ export default function WeekDetailScreen() {
                       </View>
                     );
                   }
-                  
+
                   if (currentValue !== undefined) {
                     let color = "#ECECEC";
-                    if (field === 'weight') {
-                      color = currentValue > daily.weight ? "#e74c3c" : currentValue < daily.weight ? "#27ae60" : "#ECECEC";
+                    if (field === "weight") {
+                      color =
+                        currentValue > daily.weight
+                          ? "#e74c3c"
+                          : currentValue < daily.weight
+                          ? "#27ae60"
+                          : "#ECECEC";
                     }
-                    
+
                     return (
                       <View style={styles.actualWeightRow}>
                         <Text variant="bodyMedium" style={{ color }}>
-                          {currentValue.toFixed(field === 'weight' ? 1 : 0)}{unit}
+                          {currentValue.toFixed(field === "weight" ? 1 : 0)}
+                          {unit}
                         </Text>
                         <IconButton
                           icon="pencil"
                           size={16}
-                          onPress={() => startEditing(dateKey, field, currentValue)}
+                          onPress={() =>
+                            startEditing(dateKey, field, currentValue)
+                          }
                         />
                       </View>
                     );
                   }
-                  
+
                   return (
                     <IconButton
                       icon="plus"
@@ -185,13 +203,21 @@ export default function WeekDetailScreen() {
                       </Text>
                     </DataTable.Cell>
                     <DataTable.Cell numeric>
-                      {renderEditableCell('weight', dayData?.weight, ' lbs')}
+                      {renderEditableCell("weight", dayData?.weight, " lbs")}
                     </DataTable.Cell>
                     <DataTable.Cell numeric>
-                      {renderEditableCell('calories', dayData?.caloriesEaten, ' cal')}
+                      {renderEditableCell(
+                        "calories",
+                        dayData?.caloriesEaten,
+                        " cal"
+                      )}
                     </DataTable.Cell>
                     <DataTable.Cell numeric>
-                      {renderEditableCell('exercise', dayData?.caloriesBurnedExercise, ' cal')}
+                      {renderEditableCell(
+                        "exercise",
+                        dayData?.caloriesBurnedExercise,
+                        " cal"
+                      )}
                     </DataTable.Cell>
                   </DataTable.Row>
                 );

@@ -9,21 +9,23 @@ import {
   Text,
 } from "react-native-paper";
 import { UserData, WeightProjection } from "./types";
+import { getLastWeightForWeek } from "./utils/actual-weights";
 import {
   calculateBMR,
   calculateNetCalories,
-  projectWeight,
   getWeekDateRange,
+  projectWeight,
 } from "./utils/calculations";
 import { loadUserData } from "./utils/storage";
-import { getLastWeightForWeek } from "./utils/actual-weights";
 
 export default function HomeScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [projections, setProjections] = useState<WeightProjection[]>([]);
-  const [actualWeights, setActualWeights] = useState<Record<number, number | null>>({});
+  const [actualWeights, setActualWeights] = useState<
+    Record<number, number | null>
+  >({});
 
   const loadSavedData = useCallback(async () => {
     const saved = await loadUserData();
@@ -31,7 +33,7 @@ export default function HomeScreen() {
       setUserData(saved);
       const projs = projectWeight(saved);
       setProjections(projs);
-      
+
       // Load actual weights for each week
       const actuals: Record<number, number | null> = {};
       for (const proj of projs) {
@@ -136,12 +138,18 @@ export default function HomeScreen() {
               {projections.map((proj, index) => {
                 const change = proj.endWeight - projections[0].startWeight;
                 const actualWeight = actualWeights[proj.week];
-                
+
                 // Get week date range for display
-                const weekRange = userData ? getWeekDateRange(userData, proj.week) : null;
-                const startDate = weekRange ? new Date(weekRange.startDate) : new Date(proj.date);
-                const endDate = weekRange ? new Date(weekRange.endDate) : new Date(proj.date);
-                
+                const weekRange = userData
+                  ? getWeekDateRange(userData, proj.week)
+                  : null;
+                const startDate = weekRange
+                  ? new Date(weekRange.startDate)
+                  : new Date(proj.date);
+                const endDate = weekRange
+                  ? new Date(weekRange.endDate)
+                  : new Date(proj.date);
+
                 const startStr = startDate.toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",

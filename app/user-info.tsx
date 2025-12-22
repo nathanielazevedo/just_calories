@@ -155,7 +155,7 @@ export default function UserInfoScreen() {
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
-    backgroundColor: '#212121',
+    backgroundColor: "#212121",
   },
   container: {
     padding: 16,
