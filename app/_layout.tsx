@@ -36,8 +36,11 @@ export default function RootLayout() {
           },
           headerTintColor: "#ECECEC",
           headerTitleStyle: {
-            fontWeight: "bold",
+            fontWeight: "600",
+            fontSize: 18,
           },
+          headerShadowVisible: false,
+          animation: "slide_from_right",
         }}
       >
         <Stack.Screen
@@ -51,14 +54,14 @@ export default function RootLayout() {
         <Stack.Screen
           name="user-info"
           options={{
-            title: "User Info",
+            title: "Settings",
             headerBackTitle: "Back",
           }}
         />
         <Stack.Screen
           name="week-detail"
           options={{
-            title: "Week Detail",
+            title: "Week Details",
             headerBackTitle: "Back",
           }}
         />

@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import {
   Card,
   DataTable,
+  Divider,
   IconButton,
   Text,
   TextInput,
@@ -90,11 +91,13 @@ export default function WeekDetailScreen() {
     <ScrollView style={styles.scrollView}>
       <View style={styles.container}>
         <Card style={styles.card}>
-          <Card.Title
-            title={`Week ${weekNumber} - Daily Breakdown`}
-            titleVariant="titleLarge"
-          />
           <Card.Content>
+            <View style={styles.cardHeader}>
+              <Text variant="headlineSmall" style={styles.cardTitle}>
+                📅 Week {weekNumber} - Daily Breakdown
+              </Text>
+            </View>
+            <Divider style={styles.divider} />
             <DataTable>
               <DataTable.Header>
                 <DataTable.Title>Day</DataTable.Title>
@@ -155,15 +158,21 @@ export default function WeekDetailScreen() {
                     if (field === "weight") {
                       color =
                         currentValue > daily.weight
-                          ? "#e74c3c"
+                          ? "#EF4444"
                           : currentValue < daily.weight
-                          ? "#27ae60"
+                          ? "#10A37F"
                           : "#ECECEC";
                     }
 
                     return (
                       <View style={styles.actualWeightRow}>
-                        <Text variant="bodyMedium" style={{ color }}>
+                        <Text
+                          variant="bodyMedium"
+                          style={{
+                            color,
+                            fontWeight: field === "weight" ? "600" : "400",
+                          }}
+                        >
                           {currentValue.toFixed(field === "weight" ? 1 : 0)}
                           {unit}
                         </Text>
@@ -188,17 +197,19 @@ export default function WeekDetailScreen() {
                 };
 
                 return (
-                  <DataTable.Row key={daily.day}>
+                  <DataTable.Row key={daily.day} style={styles.tableRow}>
                     <DataTable.Cell>
                       <View>
-                        <Text>{daily.dayName}</Text>
-                        <Text variant="bodySmall" style={{ color: "#888" }}>
+                        <Text variant="bodyMedium" style={styles.dayName}>
+                          {daily.dayName}
+                        </Text>
+                        <Text variant="bodySmall" style={styles.dateText}>
                           {dateStr}
                         </Text>
                       </View>
                     </DataTable.Cell>
                     <DataTable.Cell numeric>
-                      <Text variant="bodyMedium">
+                      <Text variant="bodyMedium" style={styles.projectedWeight}>
                         {daily.weight.toFixed(1)}
                       </Text>
                     </DataTable.Cell>
@@ -237,9 +248,35 @@ const styles = StyleSheet.create({
   },
   container: {
     padding: 16,
+    paddingBottom: 32,
   },
   card: {
     marginBottom: 16,
+    borderRadius: 16,
+    backgroundColor: "#2F2F2F",
+  },
+  cardHeader: {
+    marginBottom: 8,
+  },
+  cardTitle: {
+    fontWeight: "600",
+  },
+  divider: {
+    marginVertical: 16,
+    backgroundColor: "#3E3E3E",
+  },
+  tableRow: {
+    minHeight: 64,
+  },
+  dayName: {
+    fontWeight: "500",
+  },
+  dateText: {
+    color: "#999",
+    marginTop: 2,
+  },
+  projectedWeight: {
+    color: "#999",
   },
   editRow: {
     flexDirection: "row",
@@ -248,8 +285,9 @@ const styles = StyleSheet.create({
     marginVertical: -8,
   },
   input: {
-    width: 80,
+    width: 90,
     marginRight: 4,
+    backgroundColor: "#3E3E3E",
   },
   actualWeightRow: {
     flexDirection: "row",
