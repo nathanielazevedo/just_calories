@@ -8,6 +8,7 @@ export interface UserData {
   caloriesBurnedExercise: number;
   startDate: string; // ISO date string
   goalWeight: number;
+  dailyGoals?: string[]; // Array of daily goal strings
 }
 
 export interface WeightProjection {
@@ -29,4 +30,5 @@ export interface ActualWeight {
   weight?: number;
   caloriesEaten?: number;
   caloriesBurnedExercise?: number;
+  completedGoals?: string[]; // Array of completed goal strings for this day
 }

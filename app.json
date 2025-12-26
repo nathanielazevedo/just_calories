@@ -1,23 +1,32 @@
 {
   "expo": {
-    "name": "just_calories",
-    "slug": "just_calories",
+    "name": "Just Calories",
+    "slug": "just-calories",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "justcalories",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.justcalories.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "UIBackgroundModes": [],
+        "LSApplicationQueriesSchemes": [],
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#212121",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "package": "com.justcalories.app",
+      "versionCode": 1,
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
@@ -33,9 +42,9 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#212121",
           "dark": {
-            "backgroundColor": "#000000"
+            "backgroundColor": "#212121"
           }
         }
       ]
@@ -43,6 +52,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "8a610825-e0c6-4835-bb0c-60ffa5069473"
+      }
     }
   }
 }

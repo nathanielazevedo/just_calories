@@ -3,13 +3,15 @@ import { useCallback, useEffect, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import {
   Card,
-  DataTable,
+  Checkbox,
   Divider,
   IconButton,
   Text,
   TextInput,
+  TouchableRipple,
 } from "react-native-paper";
-import { ActualWeight, DailyWeightProjection } from "./types";
+import { Colors } from "../constants/colors";
+import { ActualWeight, DailyWeightProjection, UserData } from "./types";
 import { loadActualWeights, saveActualWeight } from "./utils/actual-weights";
 import { projectWeekDaily } from "./utils/calculations";
 import { loadUserData } from "./utils/storage";
@@ -28,10 +30,12 @@ export default function WeekDetailScreen() {
     "weight" | "calories" | "exercise" | null
   >(null);
   const [editValue, setEditValue] = useState<string>("");
+  const [userData, setUserData] = useState<UserData | null>(null);
 
   const loadData = useCallback(async () => {
     const userData = await loadUserData();
     if (userData) {
+      setUserData(userData);
       setDailyProjections(projectWeekDaily(userData, weekNumber));
     }
     const weights = await loadActualWeights();
@@ -87,155 +91,282 @@ export default function WeekDetailScreen() {
     setEditValue(currentValue ? String(currentValue) : "");
   };
 
+  const toggleGoal = async (date: string, goal: string) => {
+    const dayData = actualData[date] || { date };
+    const completedGoals = dayData.completedGoals || [];
+
+    const newCompletedGoals = completedGoals.includes(goal)
+      ? completedGoals.filter((g) => g !== goal)
+      : [...completedGoals, goal];
+
+    const updateData: ActualWeight = {
+      ...dayData,
+      completedGoals: newCompletedGoals,
+    };
+
+    await saveActualWeight(updateData);
+
+    setActualData((prev) => ({
+      ...prev,
+      [date]: updateData,
+    }));
+  };
+
   return (
     <ScrollView style={styles.scrollView}>
       <View style={styles.container}>
-        <Card style={styles.card}>
-          <Card.Content>
-            <View style={styles.cardHeader}>
-              <Text variant="headlineSmall" style={styles.cardTitle}>
-                📅 Week {weekNumber} - Daily Breakdown
+        <Text variant="labelMedium" style={styles.weekLabel}>
+          Week {weekNumber} - Daily Breakdown
+        </Text>
+
+        {/* Week Summary Card */}
+        {dailyProjections.length > 0 && (
+          <Card style={styles.summaryCard}>
+            <Card.Content>
+              <Text variant="titleMedium" style={styles.summaryTitle}>
+                Week Overview
               </Text>
-            </View>
-            <Divider style={styles.divider} />
-            <DataTable>
-              <DataTable.Header>
-                <DataTable.Title>Day</DataTable.Title>
-                <DataTable.Title numeric>Proj Wt</DataTable.Title>
-                <DataTable.Title numeric>Actual Wt</DataTable.Title>
-                <DataTable.Title numeric>Calories</DataTable.Title>
-                <DataTable.Title numeric>Exercise</DataTable.Title>
-              </DataTable.Header>
+              <Divider style={styles.divider} />
 
-              {dailyProjections.map((daily, index) => {
-                const dateKey = daily.date.split("T")[0];
-                const dayData = actualData[dateKey];
-                const date = new Date(daily.date);
-                const dateStr = date.toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                });
+              <View style={styles.summaryRow}>
+                <View style={styles.summaryItem}>
+                  <Text variant="bodySmall" style={styles.summaryLabel}>
+                    Starting Weight
+                  </Text>
+                  <Text variant="headlineSmall" style={styles.summaryValue}>
+                    {dailyProjections[0].weight.toFixed(1)} lbs
+                  </Text>
+                </View>
 
-                const renderEditableCell = (
-                  field: "weight" | "calories" | "exercise",
-                  currentValue: number | undefined,
-                  unit: string = ""
-                ) => {
-                  const isEditing =
-                    editingDate === dateKey && editingField === field;
+                <Text variant="headlineMedium" style={styles.summaryArrow}>
+                  →
+                </Text>
 
-                  if (isEditing) {
-                    return (
-                      <View style={styles.editRow}>
-                        <TextInput
-                          value={editValue}
-                          onChangeText={setEditValue}
-                          keyboardType="decimal-pad"
-                          mode="outlined"
-                          dense
-                          style={styles.input}
-                          autoFocus
-                        />
-                        <IconButton
-                          icon="check"
-                          size={20}
-                          onPress={() => handleSaveData(dateKey, field)}
-                        />
-                        <IconButton
-                          icon="close"
-                          size={20}
-                          onPress={() => {
-                            setEditingDate(null);
-                            setEditingField(null);
-                          }}
-                        />
-                      </View>
-                    );
-                  }
+                <View style={styles.summaryItem}>
+                  <Text variant="bodySmall" style={styles.summaryLabel}>
+                    Ending Weight
+                  </Text>
+                  <Text variant="headlineSmall" style={styles.summaryValue}>
+                    {dailyProjections[
+                      dailyProjections.length - 1
+                    ].weight.toFixed(1)}{" "}
+                    lbs
+                  </Text>
+                </View>
+              </View>
 
-                  if (currentValue !== undefined) {
-                    let color = "#ECECEC";
-                    if (field === "weight") {
-                      color =
-                        currentValue > daily.weight
-                          ? "#EF4444"
-                          : currentValue < daily.weight
-                          ? "#10A37F"
-                          : "#ECECEC";
-                    }
+              <View style={styles.summaryChange}>
+                <Text variant="bodySmall" style={styles.summaryLabel}>
+                  Expected Change
+                </Text>
+                <Text
+                  variant="titleLarge"
+                  style={[
+                    styles.changeValue,
+                    {
+                      color:
+                        dailyProjections[dailyProjections.length - 1].weight <
+                        dailyProjections[0].weight
+                          ? Colors.success
+                          : Colors.warning,
+                    },
+                  ]}
+                >
+                  {(
+                    dailyProjections[dailyProjections.length - 1].weight -
+                    dailyProjections[0].weight
+                  ).toFixed(2)}{" "}
+                  lbs
+                </Text>
+              </View>
+            </Card.Content>
+          </Card>
+        )}
 
-                    return (
-                      <View style={styles.actualWeightRow}>
-                        <Text
-                          variant="bodyMedium"
-                          style={{
-                            color,
-                            fontWeight: field === "weight" ? "600" : "400",
-                          }}
-                        >
-                          {currentValue.toFixed(field === "weight" ? 1 : 0)}
-                          {unit}
-                        </Text>
-                        <IconButton
-                          icon="pencil"
-                          size={16}
-                          onPress={() =>
-                            startEditing(dateKey, field, currentValue)
-                          }
-                        />
-                      </View>
-                    );
-                  }
+        {dailyProjections.map((daily, index) => {
+          const dateKey = daily.date.split("T")[0];
+          const dayData = actualData[dateKey];
+          const date = new Date(daily.date);
+          const dateStr = date.toLocaleDateString("en-US", {
+            weekday: "long",
+            month: "short",
+            day: "numeric",
+          });
 
-                  return (
-                    <IconButton
-                      icon="plus"
-                      size={20}
-                      onPress={() => startEditing(dateKey, field)}
+          const renderEditableField = (
+            label: string,
+            field: "weight" | "calories" | "exercise",
+            currentValue: number | undefined,
+            unit: string = ""
+          ) => {
+            const isEditing = editingDate === dateKey && editingField === field;
+
+            if (isEditing) {
+              return (
+                <View style={styles.editContainer}>
+                  <Text variant="bodySmall" style={styles.fieldLabel}>
+                    {label}
+                  </Text>
+                  <View style={styles.editRow}>
+                    <TextInput
+                      value={editValue}
+                      onChangeText={setEditValue}
+                      keyboardType="decimal-pad"
+                      mode="outlined"
+                      dense
+                      style={styles.input}
+                      autoFocus
                     />
-                  );
-                };
+                    <IconButton
+                      icon="check"
+                      size={20}
+                      onPress={() => handleSaveData(dateKey, field)}
+                    />
+                    <IconButton
+                      icon="close"
+                      size={20}
+                      onPress={() => {
+                        setEditingDate(null);
+                        setEditingField(null);
+                      }}
+                    />
+                  </View>
+                </View>
+              );
+            }
 
-                return (
-                  <DataTable.Row key={daily.day} style={styles.tableRow}>
-                    <DataTable.Cell>
-                      <View>
-                        <Text variant="bodyMedium" style={styles.dayName}>
-                          {daily.dayName}
-                        </Text>
-                        <Text variant="bodySmall" style={styles.dateText}>
-                          {dateStr}
-                        </Text>
-                      </View>
-                    </DataTable.Cell>
-                    <DataTable.Cell numeric>
-                      <Text variant="bodyMedium" style={styles.projectedWeight}>
-                        {daily.weight.toFixed(1)}
+            return (
+              <TouchableRipple
+                onPress={() => startEditing(dateKey, field, currentValue)}
+                style={styles.fieldTouchable}
+              >
+                <View style={styles.fieldContainer}>
+                  <Text variant="bodySmall" style={styles.fieldLabel}>
+                    {label}
+                  </Text>
+                  {currentValue !== undefined ? (
+                    <View style={styles.fieldValueRow}>
+                      <Text
+                        variant="titleMedium"
+                        style={[
+                          styles.fieldValue,
+                          field === "weight" && {
+                            color:
+                              currentValue > daily.weight
+                                ? Colors.warning
+                                : currentValue < daily.weight
+                                ? Colors.success
+                                : Colors.textPrimary,
+                          },
+                        ]}
+                      >
+                        {currentValue.toFixed(field === "weight" ? 1 : 0)}{" "}
+                        {unit}
                       </Text>
-                    </DataTable.Cell>
-                    <DataTable.Cell numeric>
-                      {renderEditableCell("weight", dayData?.weight, " lbs")}
-                    </DataTable.Cell>
-                    <DataTable.Cell numeric>
-                      {renderEditableCell(
-                        "calories",
-                        dayData?.caloriesEaten,
-                        " cal"
-                      )}
-                    </DataTable.Cell>
-                    <DataTable.Cell numeric>
-                      {renderEditableCell(
-                        "exercise",
-                        dayData?.caloriesBurnedExercise,
-                        " cal"
-                      )}
-                    </DataTable.Cell>
-                  </DataTable.Row>
-                );
-              })}
-            </DataTable>
-          </Card.Content>
-        </Card>
+                      <IconButton icon="pencil" size={16} />
+                    </View>
+                  ) : (
+                    <View style={styles.fieldValueRow}>
+                      <Text variant="bodyMedium" style={styles.noData}>
+                        Tap to add
+                      </Text>
+                      <IconButton icon="plus" size={16} />
+                    </View>
+                  )}
+                </View>
+              </TouchableRipple>
+            );
+          };
+
+          return (
+            <Card key={daily.day} style={styles.dayCard}>
+              <Card.Content>
+                <View style={styles.dayHeader}>
+                  <View>
+                    <Text variant="titleLarge" style={styles.dayName}>
+                      {daily.dayName}
+                    </Text>
+                    <Text variant="bodySmall" style={styles.dateText}>
+                      {dateStr}
+                    </Text>
+                  </View>
+                  <View style={styles.projectedContainer}>
+                    <Text variant="bodySmall" style={styles.fieldLabel}>
+                      Projected
+                    </Text>
+                    <Text
+                      variant="headlineSmall"
+                      style={styles.projectedWeight}
+                    >
+                      {daily.weight.toFixed(1)} lbs
+                    </Text>
+                  </View>
+                </View>
+
+                <Divider style={styles.divider} />
+
+                <View style={styles.fieldsGrid}>
+                  {renderEditableField(
+                    "Weight",
+                    "weight",
+                    dayData?.weight,
+                    "lbs"
+                  )}
+                  {renderEditableField(
+                    "Calories Eaten",
+                    "calories",
+                    dayData?.caloriesEaten,
+                    "cal"
+                  )}
+                  {renderEditableField(
+                    "Exercise",
+                    "exercise",
+                    dayData?.caloriesBurnedExercise,
+                    "cal"
+                  )}
+                </View>
+
+                {/* Daily Goals Section */}
+                {userData?.dailyGoals && userData.dailyGoals.length > 0 && (
+                  <>
+                    <Divider style={styles.divider} />
+                    <Text variant="bodySmall" style={styles.goalsHeader}>
+                      Daily Goals
+                    </Text>
+                    <View style={styles.goalsList}>
+                      {userData.dailyGoals.map((goal, index) => {
+                        const isCompleted =
+                          dayData?.completedGoals?.includes(goal) || false;
+                        return (
+                          <TouchableRipple
+                            key={index}
+                            onPress={() => toggleGoal(dateKey, goal)}
+                            style={styles.goalItem}
+                          >
+                            <View style={styles.goalRow}>
+                              <Checkbox
+                                status={isCompleted ? "checked" : "unchecked"}
+                                color={Colors.primary}
+                              />
+                              <Text
+                                style={[
+                                  styles.goalText,
+                                  isCompleted && styles.goalTextCompleted,
+                                ]}
+                              >
+                                {goal}
+                              </Text>
+                            </View>
+                          </TouchableRipple>
+                        );
+                      })}
+                    </View>
+                  </>
+                )}
+              </Card.Content>
+            </Card>
+          );
+        })}
       </View>
     </ScrollView>
   );
@@ -244,57 +375,170 @@ export default function WeekDetailScreen() {
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
-    backgroundColor: "#212121",
+    backgroundColor: Colors.background,
   },
   container: {
     padding: 16,
     paddingBottom: 32,
   },
-  card: {
+  weekLabel: {
+    color: Colors.textSecondary,
     marginBottom: 16,
-    borderRadius: 16,
-    backgroundColor: "#2F2F2F",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
-  cardHeader: {
+  summaryCard: {
+    marginBottom: 24,
+    borderRadius: 16,
+    backgroundColor: Colors.cardBackground,
+  },
+  summaryTitle: {
+    fontWeight: "600",
+    color: Colors.textPrimary,
     marginBottom: 8,
   },
-  cardTitle: {
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  summaryItem: {
+    alignItems: "center",
+    flex: 1,
+  },
+  summaryLabel: {
+    color: Colors.textSecondary,
+    marginBottom: 8,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    fontSize: 10,
+  },
+  summaryValue: {
     fontWeight: "600",
+    color: Colors.textPrimary,
   },
-  divider: {
-    marginVertical: 16,
-    backgroundColor: "#3E3E3E",
+  summaryArrow: {
+    color: Colors.textTertiary,
+    marginHorizontal: 16,
   },
-  tableRow: {
-    minHeight: 64,
+  summaryChange: {
+    alignItems: "center",
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  changeValue: {
+    fontWeight: "700",
+    marginTop: 4,
+  },
+  dayCard: {
+    marginBottom: 16,
+    borderRadius: 16,
+    backgroundColor: Colors.cardBackground,
+  },
+  dayHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 16,
   },
   dayName: {
-    fontWeight: "500",
+    fontWeight: "600",
+    color: Colors.textPrimary,
   },
   dateText: {
-    color: "#999",
-    marginTop: 2,
+    color: Colors.textSecondary,
+    marginTop: 4,
+  },
+  projectedContainer: {
+    alignItems: "flex-end",
   },
   projectedWeight: {
-    color: "#999",
+    color: Colors.textSecondary,
+    fontWeight: "600",
+    marginTop: 4,
+  },
+  divider: {
+    marginBottom: 16,
+    backgroundColor: Colors.border,
+  },
+  fieldsGrid: {
+    gap: 12,
+  },
+  fieldTouchable: {
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  fieldContainer: {
+    backgroundColor: Colors.cardItemBackground,
+    padding: 16,
+    borderRadius: 8,
+  },
+  fieldLabel: {
+    color: Colors.textSecondary,
+    marginBottom: 8,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    fontSize: 10,
+  },
+  fieldValueRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  fieldValue: {
+    fontWeight: "600",
+    color: Colors.textPrimary,
+  },
+  noData: {
+    color: Colors.textTertiary,
+    fontStyle: "italic",
+  },
+  editContainer: {
+    backgroundColor: Colors.cardItemBackground,
+    padding: 16,
+    borderRadius: 8,
   },
   editRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "flex-end",
-    marginVertical: -8,
+    gap: 8,
   },
   input: {
-    width: 90,
-    marginRight: 4,
-    backgroundColor: "#3E3E3E",
+    flex: 1,
+    backgroundColor: Colors.border,
   },
-  actualWeightRow: {
+  goalsHeader: {
+    color: Colors.textSecondary,
+    marginBottom: 12,
+    marginTop: 4,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    fontSize: 10,
+  },
+  goalsList: {
+    gap: 8,
+  },
+  goalItem: {
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  goalRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "flex-end",
+    backgroundColor: Colors.cardItemBackground,
+    paddingRight: 16,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
-  dataColumn: {
-    alignItems: "flex-end",
+  goalText: {
+    flex: 1,
+    color: Colors.textPrimary,
+    fontSize: 14,
+  },
+  goalTextCompleted: {
+    textDecorationLine: "line-through",
+    color: Colors.textSecondary,
   },
 });

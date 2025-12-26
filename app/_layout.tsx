@@ -1,27 +1,28 @@
 import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { IconButton, MD3DarkTheme, PaperProvider } from "react-native-paper";
+import { Colors } from "../constants/colors";
 
 const darkTheme = {
   ...MD3DarkTheme,
   colors: {
     ...MD3DarkTheme.colors,
-    primary: "#10A37F",
-    secondary: "#19C37D",
-    background: "#212121",
-    surface: "#2F2F2F",
-    surfaceVariant: "#3E3E3E",
-    error: "#EF4444",
-    onBackground: "#ECECEC",
-    onSurface: "#ECECEC",
-    outline: "#4D4D4D",
+    primary: Colors.primary,
+    secondary: "#7FA045",
+    background: Colors.background,
+    surface: Colors.cardBackground,
+    surfaceVariant: Colors.border,
+    error: Colors.error,
+    onBackground: Colors.textPrimary,
+    onSurface: Colors.textPrimary,
+    outline: Colors.border,
     elevation: {
       level0: "transparent",
-      level1: "#2F2F2F",
-      level2: "#363636",
-      level3: "#3D3D3D",
-      level4: "#444444",
-      level5: "#4B4B4B",
+      level1: Colors.cardBackground,
+      level2: Colors.cardItemBackground,
+      level3: Colors.border,
+      level4: Colors.border,
+      level5: Colors.border,
     },
   },
 };
@@ -32,9 +33,9 @@ export default function RootLayout() {
       <Stack
         screenOptions={{
           headerStyle: {
-            backgroundColor: "#2F2F2F",
+            backgroundColor: "#4A6B2E",
           },
-          headerTintColor: "#ECECEC",
+          headerTintColor: "#FFFFFF",
           headerTitleStyle: {
             fontWeight: "600",
             fontSize: 18,
@@ -78,6 +79,7 @@ function HeaderRight() {
       icon="account-cog"
       size={24}
       onPress={() => router.push("/user-info")}
+      style={{ margin: 0 }}
     />
   );
 }

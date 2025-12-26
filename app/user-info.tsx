@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import {
   Button,
   Card,
@@ -9,8 +9,10 @@ import {
   Text,
   TextInput,
 } from "react-native-paper";
+import { Colors } from "../constants/colors";
 import { UserData } from "./types";
-import { loadUserData, saveUserData } from "./utils/storage";
+import { clearActualWeights } from "./utils/actual-weights";
+import { clearUserData, loadUserData, saveUserData } from "./utils/storage";
 
 export default function UserInfoScreen() {
   const router = useRouter();
@@ -24,7 +26,9 @@ export default function UserInfoScreen() {
     caloriesBurnedExercise: 300,
     startDate: new Date().toISOString().split("T")[0],
     goalWeight: 170,
+    dailyGoals: [],
   });
+  const [newGoal, setNewGoal] = useState("");
 
   useEffect(() => {
     loadSavedData();
@@ -42,8 +46,47 @@ export default function UserInfoScreen() {
     router.back();
   };
 
+  const handleClearData = () => {
+    Alert.alert(
+      "Clear All Data",
+      "This will permanently delete all your data, including profile information and actual weights. This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Clear All Data",
+          style: "destructive",
+          onPress: async () => {
+            await clearUserData();
+            await clearActualWeights();
+            router.replace("/");
+          },
+        },
+      ]
+    );
+  };
+
   const updateField = (field: keyof UserData, value: string | number) => {
     setUserData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const addGoal = () => {
+    if (newGoal.trim()) {
+      setUserData((prev) => ({
+        ...prev,
+        dailyGoals: [...(prev.dailyGoals || []), newGoal.trim()],
+      }));
+      setNewGoal("");
+    }
+  };
+
+  const removeGoal = (index: number) => {
+    setUserData((prev) => ({
+      ...prev,
+      dailyGoals: (prev.dailyGoals || []).filter((_, i) => i !== index),
+    }));
   };
 
   return (
@@ -51,11 +94,9 @@ export default function UserInfoScreen() {
       <View style={styles.container}>
         <Card style={styles.card}>
           <Card.Content>
-            <View style={styles.sectionHeader}>
-              <Text variant="titleLarge" style={styles.sectionTitle}>
-                👤 Personal Info
-              </Text>
-            </View>
+            <Text variant="labelMedium" style={styles.progressLabel}>
+              Personal Info
+            </Text>
             <Divider style={styles.divider} />
             <SegmentedButtons
               value={userData.gender}
@@ -65,6 +106,12 @@ export default function UserInfoScreen() {
                 { value: "female", label: "Female" },
               ]}
               style={styles.segmentedButtons}
+              theme={{
+                colors: {
+                  secondaryContainer: Colors.primary,
+                  onSecondaryContainer: "#FFFFFF",
+                },
+              }}
             />
 
             <TextInput
@@ -140,11 +187,9 @@ export default function UserInfoScreen() {
 
         <Card style={styles.card}>
           <Card.Content>
-            <View style={styles.sectionHeader}>
-              <Text variant="titleLarge" style={styles.sectionTitle}>
-                🍽️ Daily Calories
-              </Text>
-            </View>
+            <Text variant="labelMedium" style={styles.progressLabel}>
+              Daily Calories
+            </Text>
             <Divider style={styles.divider} />
             <TextInput
               label="Calories Eaten (Daily)"
@@ -183,14 +228,80 @@ export default function UserInfoScreen() {
           </Card.Content>
         </Card>
 
+        <Card style={styles.card}>
+          <Card.Content>
+            <Text variant="labelMedium" style={styles.progressLabel}>
+              Daily Goals
+            </Text>
+            <Divider style={styles.divider} />
+
+            <View style={styles.goalInputRow}>
+              <TextInput
+                label="New Goal"
+                value={newGoal}
+                onChangeText={setNewGoal}
+                mode="outlined"
+                style={styles.goalInput}
+                placeholder="e.g., Drink 8 glasses of water"
+                onSubmitEditing={addGoal}
+              />
+              <Button
+                mode="contained"
+                onPress={addGoal}
+                style={styles.addButton}
+                contentStyle={{ paddingVertical: 8 }}
+                buttonColor={Colors.primary}
+                textColor="#FFFFFF"
+              >
+                Add
+              </Button>
+            </View>
+
+            {userData.dailyGoals && userData.dailyGoals.length > 0 && (
+              <View style={styles.goalsList}>
+                {userData.dailyGoals.map((goal, index) => (
+                  <View key={index} style={styles.goalItem}>
+                    <Text style={styles.goalText}>{goal}</Text>
+                    <Button
+                      mode="text"
+                      onPress={() => removeGoal(index)}
+                      textColor={Colors.warning}
+                      compact
+                    >
+                      Remove
+                    </Button>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {(!userData.dailyGoals || userData.dailyGoals.length === 0) && (
+              <Text style={styles.emptyText}>
+                No daily goals yet. Add goals to track in your week details.
+              </Text>
+            )}
+          </Card.Content>
+        </Card>
+
         <Button
           mode="contained"
           onPress={handleSave}
           style={styles.button}
           contentStyle={{ paddingVertical: 8 }}
-          icon="check"
+          buttonColor={Colors.primary}
+          textColor="#FFFFFF"
         >
           Save Changes
+        </Button>
+
+        <Button
+          mode="outlined"
+          onPress={handleClearData}
+          style={styles.button}
+          contentStyle={{ paddingVertical: 8 }}
+          textColor={Colors.warning}
+        >
+          Clear All Data
         </Button>
       </View>
     </ScrollView>
@@ -200,7 +311,7 @@ export default function UserInfoScreen() {
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
-    backgroundColor: "#212121",
+    backgroundColor: Colors.background,
   },
   container: {
     padding: 16,
@@ -209,7 +320,7 @@ const styles = StyleSheet.create({
   card: {
     marginBottom: 16,
     borderRadius: 16,
-    backgroundColor: "#2F2F2F",
+    backgroundColor: Colors.cardBackground,
   },
   sectionHeader: {
     marginBottom: 8,
@@ -217,15 +328,21 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontWeight: "600",
   },
+  progressLabel: {
+    color: Colors.textSecondary,
+    marginBottom: 4,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
   subsectionTitle: {
     fontWeight: "500",
-    color: "#999",
+    color: Colors.textSecondary,
     marginTop: 8,
     marginBottom: 8,
   },
   divider: {
     marginBottom: 16,
-    backgroundColor: "#3E3E3E",
+    backgroundColor: Colors.border,
   },
   segmentedButtons: {
     marginBottom: 16,
@@ -253,5 +370,41 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 32,
     borderRadius: 12,
+  },
+  goalInputRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 16,
+  },
+  goalInput: {
+    flex: 1,
+  },
+  addButton: {
+    justifyContent: "center",
+    borderRadius: 12,
+  },
+  goalsList: {
+    gap: 8,
+  },
+  goalItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: Colors.cardItemBackground,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  goalText: {
+    flex: 1,
+    color: Colors.textPrimary,
+    fontSize: 14,
+  },
+  emptyText: {
+    color: Colors.textSecondary,
+    fontStyle: "italic",
+    textAlign: "center",
+    marginVertical: 8,
   },
 });
