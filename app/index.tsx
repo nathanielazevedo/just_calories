@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   Button,
   Card,
-  Divider,
   Text,
   TouchableRipple,
 } from "react-native-paper";
@@ -169,30 +168,38 @@ export default function HomeScreen() {
             <Text variant="labelMedium" style={styles.progressLabel}>
               Overview
             </Text>
-            <Divider style={styles.overviewDivider} />
 
-            <View style={styles.weightCardsRow}>
-              <View style={styles.weightCard}>
-                <Text variant="bodySmall" style={styles.weightCardLabel}>
-                  Starting Weight
+            <View style={styles.weightProgressCard}>
+              <View style={styles.weightProgressRow}>
+                <View style={styles.weightProgressItem}>
+                  <Text variant="bodySmall" style={styles.weightCardLabel}>
+                    {new Date(userData.startDate).toLocaleDateString("en-US", {
+                      month: "numeric",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </Text>
+                  <Text variant="headlineMedium" style={styles.weightCardValue}>
+                    {userData.weight}
+                  </Text>
+                  <Text variant="bodySmall" style={styles.weightCardUnit}>
+                    lbs
+                  </Text>
+                </View>
+                <Text variant="headlineLarge" style={styles.weightArrow}>
+                  →
                 </Text>
-                <Text variant="headlineMedium" style={styles.weightCardValue}>
-                  {userData.weight}
-                </Text>
-                <Text variant="bodySmall" style={styles.weightCardUnit}>
-                  lbs
-                </Text>
-              </View>
-              <View style={styles.weightCard}>
-                <Text variant="bodySmall" style={styles.weightCardLabel}>
-                  Goal Weight
-                </Text>
-                <Text variant="headlineMedium" style={styles.goalWeightValue}>
-                  {userData.goalWeight}
-                </Text>
-                <Text variant="bodySmall" style={styles.weightCardUnit}>
-                  lbs
-                </Text>
+                <View style={styles.weightProgressItem}>
+                  <Text variant="bodySmall" style={styles.weightCardLabel}>
+                    {endDateStr || "Goal"}
+                  </Text>
+                  <Text variant="headlineMedium" style={styles.goalWeightValue}>
+                    {userData.goalWeight}
+                  </Text>
+                  <Text variant="bodySmall" style={styles.weightCardUnit}>
+                    lbs
+                  </Text>
+                </View>
               </View>
             </View>
 
@@ -212,10 +219,10 @@ export default function HomeScreen() {
                       {(fill) => (
                         <View style={styles.circularProgressCenter}>
                           <Text
-                            variant="headlineSmall"
+                            variant="titleMedium"
                             style={styles.circularProgressText}
                           >
-                            {fill.toFixed(0)}%
+                            {(totalWeightToLose - weightDiff).toFixed(1)}
                           </Text>
                           <Text
                             variant="bodySmall"
@@ -227,7 +234,7 @@ export default function HomeScreen() {
                       )}
                     </AnimatedCircularProgress>
                     <Text variant="bodySmall" style={styles.progressText}>
-                      {weightDiff.toFixed(1)} lbs to go
+                      of {totalWeightToLose.toFixed(1)} lbs
                     </Text>
                   </View>
 
@@ -244,10 +251,10 @@ export default function HomeScreen() {
                       {(fill) => (
                         <View style={styles.circularProgressCenter}>
                           <Text
-                            variant="headlineSmall"
+                            variant="titleMedium"
                             style={styles.circularProgressText}
                           >
-                            {fill.toFixed(2)}%
+                            {caloriesBurnedSoFar.toFixed(2)}
                           </Text>
                           <Text
                             variant="bodySmall"
@@ -259,40 +266,7 @@ export default function HomeScreen() {
                       )}
                     </AnimatedCircularProgress>
                     <Text variant="bodySmall" style={styles.progressText}>
-                      {caloriesBurnedSoFar.toFixed(2)} burned
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.statsCardsRow}>
-                  <View style={styles.statCard}>
-                    <Text variant="bodySmall" style={styles.statCardLabel}>
-                      Expected Loss
-                    </Text>
-                    <Text variant="titleLarge" style={styles.statCardValue}>
-                      {weightDiff.toFixed(1)}
-                    </Text>
-                    <Text variant="bodySmall" style={styles.statCardUnit}>
-                      lbs
-                    </Text>
-                  </View>
-                  <View style={styles.statCard}>
-                    <Text variant="bodySmall" style={styles.statCardLabel}>
-                      Total Calories
-                    </Text>
-                    <Text variant="titleLarge" style={styles.statCardValue}>
-                      {(weightDiff * 3500).toFixed(0)}
-                    </Text>
-                    <Text variant="bodySmall" style={styles.statCardUnit}>
-                      cal
-                    </Text>
-                  </View>
-                  <View style={styles.statCard}>
-                    <Text variant="bodySmall" style={styles.statCardLabel}>
-                      Expected Date
-                    </Text>
-                    <Text variant="titleMedium" style={styles.statCardValue}>
-                      {endDateStr}
+                      of {totalCaloriesToLose.toFixed(0)}
                     </Text>
                   </View>
                 </View>
@@ -306,77 +280,61 @@ export default function HomeScreen() {
             <Text variant="labelMedium" style={styles.progressLabel}>
               Burn Rates
             </Text>
-            <View style={styles.dailyStatsGrid}>
-              <View style={styles.dailyStatCard}>
-                <Text variant="bodySmall" style={styles.dailyStatLabel}>
+            <View style={styles.equationContainer}>
+              <View style={styles.equationItem}>
+                <Text variant="bodySmall" style={styles.equationLabel}>
                   Intake
                 </Text>
-                <Text variant="headlineSmall" style={styles.dailyStatValue}>
+                <Text variant="titleMedium" style={styles.equationValue}>
                   {userData.caloriesEaten}
                 </Text>
               </View>
-              <View style={styles.dailyStatCard}>
-                <Text variant="bodySmall" style={styles.dailyStatLabel}>
+              <Text variant="titleMedium" style={styles.equationOperator}>
+                -
+              </Text>
+              <View style={styles.equationItem}>
+                <Text variant="bodySmall" style={styles.equationLabel}>
                   BMR
                 </Text>
-                <Text variant="headlineSmall" style={styles.dailyStatValue}>
+                <Text variant="titleMedium" style={styles.equationValue}>
                   {bmr}
                 </Text>
               </View>
-              <View style={styles.dailyStatCard}>
-                <Text variant="bodySmall" style={styles.dailyStatLabel}>
+              <Text variant="titleMedium" style={styles.equationOperator}>
+                -
+              </Text>
+              <View style={styles.equationItem}>
+                <Text variant="bodySmall" style={styles.equationLabel}>
                   Exercise
                 </Text>
-                <Text variant="headlineSmall" style={styles.dailyStatValue}>
+                <Text variant="titleMedium" style={styles.equationValue}>
                   {userData.caloriesBurnedExercise}
                 </Text>
               </View>
-              <View style={[styles.dailyStatCard, styles.netStatCard]}>
-                <Text variant="bodySmall" style={styles.dailyStatLabel}>
+              <Text variant="titleMedium" style={styles.equationOperator}>
+                =
+              </Text>
+              <View style={styles.equationItem}>
+                <Text variant="bodySmall" style={styles.equationLabel}>
                   Net
                 </Text>
-                <Text
-                  variant="headlineSmall"
-                  style={[
-                    styles.dailyStatValue,
-                    { color: netCalories > 0 ? "#D4856B" : "#6B8E23" },
-                  ]}
-                >
+                <Text variant="titleMedium" style={styles.equationValue}>
                   {netCalories > 0 ? "+" : ""}
                   {netCalories}
                 </Text>
               </View>
             </View>
 
-            <Divider style={styles.divider} />
-
-            <Text variant="labelMedium" style={styles.sectionHeader}>
-              Weight Change
-            </Text>
             <View style={styles.metricsGrid}>
               <View style={styles.metricCard}>
                 <Text variant="bodySmall" style={styles.metricLabel}>
-                  Per Day
+                  Per Week
                 </Text>
-                <Text
-                  variant="headlineSmall"
-                  style={[
-                    styles.metricValue,
-                    {
-                      color:
-                        poundsPerDay < 0
-                          ? Colors.success
-                          : poundsPerDay > 0
-                          ? Colors.warning
-                          : Colors.textTertiary,
-                    },
-                  ]}
-                >
-                  {poundsPerDay < 0 ? "-" : "+"}
-                  {Math.abs(poundsPerDay).toFixed(3)}
+                <Text variant="headlineSmall" style={styles.metricValueBlack}>
+                  {(Math.abs(netCalories) * 7).toFixed(0)}
                 </Text>
                 <Text variant="bodySmall" style={styles.metricUnit}>
-                  lbs
+                  cal
                 </Text>
               </View>
 
@@ -384,21 +342,7 @@ export default function HomeScreen() {
                 <Text variant="bodySmall" style={styles.metricLabel}>
                   Per Week
                 </Text>
-                <Text
-                  variant="headlineSmall"
-                  style={[
-                    styles.metricValue,
-                    {
-                      color:
-                        poundsPerDay < 0
-                          ? Colors.success
-                          : poundsPerDay > 0
-                          ? Colors.warning
-                          : Colors.textTertiary,
-                    },
-                  ]}
-                >
-                  {poundsPerDay < 0 ? "-" : "+"}
+                <Text variant="headlineSmall" style={styles.metricValueBlack}>
                   {Math.abs(poundsPerDay * 7).toFixed(2)}
                 </Text>
                 <Text variant="bodySmall" style={styles.metricUnit}>
@@ -406,131 +350,20 @@ export default function HomeScreen() {
                 </Text>
               </View>
 
-              <View style={styles.metricCard}>
-                <Text variant="bodySmall" style={styles.metricLabel}>
-                  Per Month
-                </Text>
-                <Text
-                  variant="headlineSmall"
-                  style={[
-                    styles.metricValue,
-                    {
-                      color:
-                        poundsPerDay < 0
-                          ? Colors.success
-                          : poundsPerDay > 0
-                          ? Colors.warning
-                          : Colors.textTertiary,
-                    },
-                  ]}
-                >
-                  {poundsPerDay < 0 ? "-" : "+"}
-                  {Math.abs(poundsPerDay * 30).toFixed(1)}
-                </Text>
-                <Text variant="bodySmall" style={styles.metricUnit}>
-                  lbs
-                </Text>
-              </View>
-            </View>
-
-            <Divider style={styles.divider} />
-
-            <Text variant="labelMedium" style={styles.sectionHeader}>
-              Calorie Burn Rate
-            </Text>
-            <View style={styles.metricsGrid}>
-              <View style={styles.metricCard}>
-                <Text variant="bodySmall" style={styles.metricLabel}>
-                  Per Hour
-                </Text>
-                <Text variant="headlineSmall" style={styles.metricValue}>
-                  {(Math.abs(netCalories) / 24).toFixed(1)}
-                </Text>
-                <Text variant="bodySmall" style={styles.metricUnit}>
-                  cal
-                </Text>
-              </View>
-              <View style={styles.metricCard}>
-                <Text variant="bodySmall" style={styles.metricLabel}>
-                  Per Day
-                </Text>
-                <Text variant="headlineSmall" style={styles.metricValue}>
-                  {Math.abs(netCalories).toFixed(0)}
-                </Text>
-                <Text variant="bodySmall" style={styles.metricUnit}>
-                  cal
-                </Text>
-              </View>
-              <View style={styles.metricCard}>
-                <Text variant="bodySmall" style={styles.metricLabel}>
-                  Per Week
-                </Text>
-                <Text variant="headlineSmall" style={styles.metricValue}>
-                  {(Math.abs(netCalories) * 7).toFixed(0)}
-                </Text>
-                <Text variant="bodySmall" style={styles.metricUnit}>
-                  cal
-                </Text>
-              </View>
-            </View>
-
-            {poundsPerDay < 0 && (
-              <>
-                <Divider style={styles.divider} />
-                <Text variant="labelMedium" style={styles.sectionHeader}>
-                  Time to Lose
-                </Text>
-                <View style={styles.metricsGrid}>
-                  <View style={styles.metricCard}>
-                    <Text variant="bodySmall" style={styles.metricLabel}>
-                      1 Pound
-                    </Text>
-                    <Text variant="headlineSmall" style={styles.metricValue}>
-                      {daysPerPound.toFixed(1)}
-                    </Text>
-                    <Text variant="bodySmall" style={styles.metricUnit}>
-                      days
-                    </Text>
-                  </View>
-
-                  <View style={styles.metricCard}>
-                    <Text variant="bodySmall" style={styles.metricLabel}>
-                      3 Pounds
-                    </Text>
-                    <Text variant="headlineSmall" style={styles.metricValue}>
-                      {(daysPerPound * 3).toFixed(1)}
-                    </Text>
-                    <Text variant="bodySmall" style={styles.metricUnit}>
-                      days
-                    </Text>
-                  </View>
-
-                  <View style={styles.metricCard}>
-                    <Text variant="bodySmall" style={styles.metricLabel}>
-                      5 Pounds
-                    </Text>
-                    <Text variant="headlineSmall" style={styles.metricValue}>
-                      {(daysPerPound * 5).toFixed(1)}
-                    </Text>
-                    <Text variant="bodySmall" style={styles.metricUnit}>
-                      days
-                    </Text>
-                  </View>
-
-                  <View style={styles.metricCard}>
-                    <Text variant="bodySmall" style={styles.metricLabel}>
-                      10 Pounds
-                    </Text>
-                    <Text variant="headlineSmall" style={styles.metricValue}>
-                      {(daysPerPound * 10).toFixed(0)}
-                    </Text>
-                    <Text variant="bodySmall" style={styles.metricUnit}>
-                      days
-                    </Text>
-                  </View>
+              {poundsPerDay < 0 && (
+                <View style={styles.metricCard}>
+                  <Text variant="bodySmall" style={styles.metricLabel}>
+                    1 Pound
+                  </Text>
+                  <Text variant="headlineSmall" style={styles.metricValueBlack}>
+                    {daysPerPound.toFixed(1)}
+                  </Text>
+                  <Text variant="bodySmall" style={styles.metricUnit}>
+                    days
+                  </Text>
                 </View>
-              </>
-            )}
+              )}
+            </View>
           </Card.Content>
         </Card>
 
@@ -540,7 +373,6 @@ export default function HomeScreen() {
             <Text variant="labelMedium" style={styles.progressLabel}>
               Weekly Projections
             </Text>
-            <Divider style={styles.divider} />
             <View style={styles.timeline}>
               {projections.map((proj, index) => {
                 const change = proj.endWeight - projections[0].startWeight;
@@ -586,34 +418,39 @@ export default function HomeScreen() {
                       {/* Week content */}
                       <View style={styles.timelineBody}>
                         <View style={styles.timelineHeader}>
-                          <View>
-                            <Text
-                              variant="titleMedium"
-                              style={styles.weekTitle}
-                            >
-                              Week {proj.week}
-                            </Text>
-                            <Text variant="bodySmall" style={styles.weekDate}>
-                              {startStr} - {endStr}
-                            </Text>
-                          </View>
-                          <View style={styles.timelineWeights}>
-                            <Text
-                              variant="bodySmall"
-                              style={styles.weightLabel}
-                            >
-                              Target
-                            </Text>
-                            <Text
-                              variant="titleMedium"
-                              style={styles.weightValue}
-                            >
-                              {proj.endWeight} lbs
-                            </Text>
-                          </View>
+                          <Text variant="titleMedium" style={styles.weekTitle}>
+                            Week {proj.week}
+                          </Text>
+                          <Text variant="bodySmall" style={styles.weekDate}>
+                            {startStr} - {endStr}
+                          </Text>
                         </View>
 
                         <View style={styles.timelineStats}>
+                          <View style={styles.timelineStat}>
+                            <Text variant="bodySmall" style={styles.statLabel}>
+                              Start
+                            </Text>
+                            <Text
+                              variant="titleSmall"
+                              style={styles.timelineStatValue}
+                            >
+                              {proj.startWeight.toFixed(1)} lbs
+                            </Text>
+                          </View>
+
+                          <View style={styles.timelineStat}>
+                            <Text variant="bodySmall" style={styles.statLabel}>
+                              End
+                            </Text>
+                            <Text
+                              variant="titleSmall"
+                              style={styles.timelineStatValue}
+                            >
+                              {proj.endWeight.toFixed(1)} lbs
+                            </Text>
+                          </View>
+
                           <View style={styles.timelineStat}>
                             <Text variant="bodySmall" style={styles.statLabel}>
                               Actual
@@ -622,48 +459,15 @@ export default function HomeScreen() {
                             actualWeight !== undefined ? (
                               <Text
                                 variant="titleSmall"
-                                style={[
-                                  styles.timelineStatValue,
-                                  {
-                                    color:
-                                      actualWeight > proj.endWeight
-                                        ? Colors.warning
-                                        : actualWeight < proj.endWeight
-                                        ? Colors.success
-                                        : Colors.textPrimary,
-                                  },
-                                ]}
+                                style={styles.timelineStatValue}
                               >
                                 {actualWeight.toFixed(1)} lbs
                               </Text>
                             ) : (
                               <Text variant="bodyMedium" style={styles.noData}>
-                                No data
+                                —
                               </Text>
                             )}
-                          </View>
-
-                          <View style={styles.timelineStat}>
-                            <Text variant="bodySmall" style={styles.statLabel}>
-                              Total Change
-                            </Text>
-                            <Text
-                              variant="titleSmall"
-                              style={[
-                                styles.timelineStatValue,
-                                {
-                                  color:
-                                    change > 0
-                                      ? Colors.warning
-                                      : change < 0
-                                      ? Colors.success
-                                      : Colors.textTertiary,
-                                },
-                              ]}
-                            >
-                              {change > 0 ? "+" : ""}
-                              {change.toFixed(1)} lbs
-                            </Text>
                           </View>
                         </View>
                       </View>
@@ -753,6 +557,27 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     fontWeight: "600",
   },
+  weightProgressCard: {
+    backgroundColor: Colors.cardItemBackground,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  weightProgressRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+  },
+  weightProgressItem: {
+    alignItems: "center",
+    flex: 1,
+  },
+  weightArrow: {
+    color: Colors.textTertiary,
+    marginHorizontal: 16,
+  },
   weightCardsRow: {
     flexDirection: "row",
     gap: 12,
@@ -808,7 +633,7 @@ const styles = StyleSheet.create({
   },
   circularProgressRow: {
     flexDirection: "row",
-    justifyContent: "space-around",
+    justifyContent: "space-evenly",
     marginBottom: 24,
   },
   circularProgressItem: {
@@ -817,9 +642,6 @@ const styles = StyleSheet.create({
   },
   goalInfoContainer: {
     marginTop: 20,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
   },
   statsCardsRow: {
     flexDirection: "row",
@@ -909,6 +731,53 @@ const styles = StyleSheet.create({
     marginVertical: 16,
     backgroundColor: Colors.border,
   },
+  accordionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  accordionIcon: {
+    color: Colors.textSecondary,
+    fontWeight: "bold",
+  },
+  equationContainer: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "center",
+    marginTop: 16,
+    marginBottom: 8,
+    gap: 8,
+  },
+  equationItem: {
+    alignItems: "center",
+  },
+  equationLabel: {
+    color: Colors.textSecondary,
+    fontSize: 11,
+    marginBottom: 4,
+  },
+  equationValue: {
+    color: Colors.textPrimary,
+    fontWeight: "600",
+  },
+  equationOperator: {
+    color: Colors.textTertiary,
+    marginHorizontal: 4,
+    marginBottom: 2,
+  },
+  equationSubtext: {
+    color: Colors.textSecondary,
+    textAlign: "center",
+    marginTop: 12,
+    fontSize: 11,
+  },
+  equationText: {
+    color: Colors.textPrimary,
+    textAlign: "center",
+    marginTop: 4,
+    marginBottom: 8,
+    fontWeight: "600",
+  },
   dailyStatsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -963,6 +832,11 @@ const styles = StyleSheet.create({
   metricValue: {
     fontWeight: "bold",
     color: "#6B8E23",
+  },
+  metricValueBlack: {
+    fontWeight: "bold",
+    color: "#000000",
+    fontSize: 20,
   },
   metricUnit: {
     color: "#666",
@@ -1087,6 +961,7 @@ const styles = StyleSheet.create({
   },
   timelineStats: {
     flexDirection: "row",
+    justifyContent: "space-between",
     gap: 24,
   },
   timelineStat: {

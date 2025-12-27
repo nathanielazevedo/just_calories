@@ -1,3 +1,4 @@
+import { usePreventRemove } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, ScrollView, StyleSheet, View } from "react-native";
@@ -28,21 +29,58 @@ export default function UserInfoScreen() {
     goalWeight: 170,
     dailyGoals: [],
   });
+  const [originalUserData, setOriginalUserData] = useState<UserData | null>(
+    null
+  );
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [newGoal, setNewGoal] = useState("");
+
+  usePreventRemove(hasUnsavedChanges, ({ data }) => {
+    Alert.alert(
+      "Unsaved Changes",
+      "You have unsaved changes. Are you sure you want to leave?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Leave",
+          style: "destructive",
+          onPress: () => {
+            setHasUnsavedChanges(false);
+            // Use setTimeout to ensure state updates before navigation
+            setTimeout(() => router.back(), 0);
+          },
+        },
+      ]
+    );
+  });
 
   useEffect(() => {
     loadSavedData();
   }, []);
 
+  useEffect(() => {
+    if (originalUserData) {
+      const hasChanges =
+        JSON.stringify(userData) !== JSON.stringify(originalUserData);
+      setHasUnsavedChanges(hasChanges);
+    }
+  }, [userData, originalUserData]);
+
   const loadSavedData = async () => {
     const saved = await loadUserData();
     if (saved) {
       setUserData(saved);
+      setOriginalUserData(saved);
     }
   };
 
   const handleSave = async () => {
     await saveUserData(userData);
+    setOriginalUserData(userData);
+    setHasUnsavedChanges(false);
     router.back();
   };
 

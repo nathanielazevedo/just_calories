@@ -105,10 +105,10 @@ export function projectWeight(userData: UserData): WeightProjection[] {
       date: currentDate.toISOString(),
     });
     
-    // Check if goal is reached (based on start weight of the week)
-    if (isLosingWeight && startWeight <= goalWeight) {
+    // Check if goal is reached (based on end weight of the week)
+    if (isLosingWeight && endWeight <= goalWeight) {
       break;
-    } else if (!isLosingWeight && startWeight >= goalWeight) {
+    } else if (!isLosingWeight && endWeight >= goalWeight) {
       break;
     }
     

@@ -188,10 +188,14 @@ export default function WeekDetailScreen() {
           const dayData = actualData[dateKey];
           const date = new Date(daily.date);
           const dateStr = date.toLocaleDateString("en-US", {
-            weekday: "long",
             month: "short",
             day: "numeric",
           });
+
+          // Start weight is previous day's weight (or first day for index 0)
+          const startWeight =
+            index > 0 ? dailyProjections[index - 1].weight : daily.weight;
+          const endWeight = daily.weight;
 
           const renderEditableField = (
             label: string,
@@ -282,7 +286,7 @@ export default function WeekDetailScreen() {
             <Card key={daily.day} style={styles.dayCard}>
               <Card.Content>
                 <View style={styles.dayHeader}>
-                  <View>
+                  <View style={styles.dayTitleContainer}>
                     <Text variant="titleLarge" style={styles.dayName}>
                       {daily.dayName}
                     </Text>
@@ -290,78 +294,97 @@ export default function WeekDetailScreen() {
                       {dateStr}
                     </Text>
                   </View>
-                  <View style={styles.projectedContainer}>
-                    <Text variant="bodySmall" style={styles.fieldLabel}>
-                      Projected
-                    </Text>
-                    <Text
-                      variant="headlineSmall"
-                      style={styles.projectedWeight}
-                    >
-                      {daily.weight.toFixed(1)} lbs
-                    </Text>
+                  <View style={styles.weightsContainer}>
+                    <View style={styles.weightItem}>
+                      <Text variant="bodySmall" style={styles.fieldLabel}>
+                        Start
+                      </Text>
+                      <Text variant="titleMedium" style={styles.weightValue}>
+                        {startWeight.toFixed(1)}
+                      </Text>
+                    </View>
+                    <View style={styles.weightItem}>
+                      <Text variant="bodySmall" style={styles.fieldLabel}>
+                        End
+                      </Text>
+                      <Text variant="titleMedium" style={styles.weightValue}>
+                        {endWeight.toFixed(1)}
+                      </Text>
+                    </View>
+                    {dayData?.weight !== undefined && (
+                      <View style={styles.weightItem}>
+                        <Text variant="bodySmall" style={styles.fieldLabel}>
+                          Actual
+                        </Text>
+                        <Text
+                          variant="titleMedium"
+                          style={[
+                            styles.weightValue,
+                            {
+                              color:
+                                dayData.weight > endWeight
+                                  ? Colors.warning
+                                  : dayData.weight < endWeight
+                                  ? Colors.success
+                                  : Colors.textPrimary,
+                            },
+                          ]}
+                        >
+                          {dayData.weight.toFixed(1)}
+                        </Text>
+                      </View>
+                    )}
                   </View>
                 </View>
 
-                <Divider style={styles.divider} />
-
                 <View style={styles.fieldsGrid}>
-                  {renderEditableField(
-                    "Weight",
-                    "weight",
-                    dayData?.weight,
-                    "lbs"
-                  )}
-                  {renderEditableField(
-                    "Calories Eaten",
-                    "calories",
-                    dayData?.caloriesEaten,
-                    "cal"
-                  )}
-                  {renderEditableField(
-                    "Exercise",
-                    "exercise",
-                    dayData?.caloriesBurnedExercise,
-                    "cal"
-                  )}
+                  {daily.dayName === "Sunday" &&
+                    renderEditableField(
+                      "Weight",
+                      "weight",
+                      dayData?.weight,
+                      "lbs"
+                    )}
                 </View>
 
                 {/* Daily Goals Section */}
-                {userData?.dailyGoals && userData.dailyGoals.length > 0 && (
-                  <>
-                    <Divider style={styles.divider} />
-                    <Text variant="bodySmall" style={styles.goalsHeader}>
-                      Daily Goals
-                    </Text>
-                    <View style={styles.goalsList}>
-                      {userData.dailyGoals.map((goal, index) => {
-                        const isCompleted =
-                          dayData?.completedGoals?.includes(goal) || false;
-                        return (
-                          <TouchableRipple
-                            key={index}
-                            onPress={() => toggleGoal(dateKey, goal)}
-                            style={styles.goalItem}
-                          >
-                            <View style={styles.goalRow}>
-                              <Checkbox
-                                status={isCompleted ? "checked" : "unchecked"}
-                                color={Colors.primary}
-                              />
-                              <Text
-                                style={[
-                                  styles.goalText,
-                                  isCompleted && styles.goalTextCompleted,
-                                ]}
-                              >
-                                {goal}
-                              </Text>
-                            </View>
-                          </TouchableRipple>
-                        );
-                      })}
-                    </View>
-                  </>
+                <Divider style={styles.divider} />
+                <Text variant="bodySmall" style={styles.goalsHeader}>
+                  Daily Goals
+                </Text>
+                {userData?.dailyGoals && userData.dailyGoals.length > 0 ? (
+                  <View style={styles.goalsList}>
+                    {userData.dailyGoals.map((goal, index) => {
+                      const isCompleted =
+                        dayData?.completedGoals?.includes(goal) || false;
+                      return (
+                        <TouchableRipple
+                          key={index}
+                          onPress={() => toggleGoal(dateKey, goal)}
+                          style={styles.goalItem}
+                        >
+                          <View style={styles.goalRow}>
+                            <Checkbox
+                              status={isCompleted ? "checked" : "unchecked"}
+                              color={Colors.primary}
+                            />
+                            <Text
+                              style={[
+                                styles.goalText,
+                                isCompleted && styles.goalTextCompleted,
+                              ]}
+                            >
+                              {goal}
+                            </Text>
+                          </View>
+                        </TouchableRipple>
+                      );
+                    })}
+                  </View>
+                ) : (
+                  <Text variant="bodyMedium" style={styles.noGoalsText}>
+                    Set up daily goals in Settings
+                  </Text>
                 )}
               </Card.Content>
             </Card>
@@ -443,6 +466,9 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: 16,
   },
+  dayTitleContainer: {
+    flex: 1,
+  },
   dayName: {
     fontWeight: "600",
     color: Colors.textPrimary,
@@ -452,7 +478,19 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   projectedContainer: {
-    alignItems: "flex-end",
+    marginTop: 8,
+  },
+  weightsContainer: {
+    flexDirection: "row",
+    gap: 16,
+    alignItems: "flex-start",
+  },
+  weightItem: {
+    alignItems: "center",
+  },
+  weightValue: {
+    fontWeight: "600",
+    marginTop: 2,
   },
   projectedWeight: {
     color: Colors.textSecondary,
@@ -540,5 +578,11 @@ const styles = StyleSheet.create({
   goalTextCompleted: {
     textDecorationLine: "line-through",
     color: Colors.textSecondary,
+  },
+  noGoalsText: {
+    color: Colors.textTertiary,
+    fontStyle: "italic",
+    textAlign: "center",
+    paddingVertical: 12,
   },
 });
