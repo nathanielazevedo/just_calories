@@ -212,6 +212,9 @@ export function projectWeekDaily(userData: UserData, weekNumber: number): DailyW
   let dayIndex = 0;
   
   while (currentDate <= weekEndDate && dayIndex < daysInWeek) {
+    // Add the daily weight change first, so we show weight at END of each day
+    currentWeight += dailyWeightChange;
+    
     projections.push({
       day: dayIndex,
       weight: Math.round(currentWeight * 10) / 10,
@@ -219,7 +222,6 @@ export function projectWeekDaily(userData: UserData, weekNumber: number): DailyW
       dayName: dayNames[currentDate.getDay()],
     });
     
-    currentWeight += dailyWeightChange;
     currentDate.setDate(currentDate.getDate() + 1);
     dayIndex++;
   }

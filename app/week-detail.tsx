@@ -192,9 +192,9 @@ export default function WeekDetailScreen() {
             day: "numeric",
           });
 
-          // Start weight is previous day's weight (or first day for index 0)
+          // Start weight is previous day's end weight (or userData.weight for first day)
           const startWeight =
-            index > 0 ? dailyProjections[index - 1].weight : daily.weight;
+            index > 0 ? dailyProjections[index - 1].weight : userData.weight;
           const endWeight = daily.weight;
 
           const renderEditableField = (
@@ -207,34 +207,30 @@ export default function WeekDetailScreen() {
 
             if (isEditing) {
               return (
-                <View style={styles.editContainer}>
-                  <Text variant="bodySmall" style={styles.fieldLabel}>
-                    {label}
-                  </Text>
-                  <View style={styles.editRow}>
-                    <TextInput
-                      value={editValue}
-                      onChangeText={setEditValue}
-                      keyboardType="decimal-pad"
-                      mode="outlined"
-                      dense
-                      style={styles.input}
-                      autoFocus
-                    />
-                    <IconButton
-                      icon="check"
-                      size={20}
-                      onPress={() => handleSaveData(dateKey, field)}
-                    />
-                    <IconButton
-                      icon="close"
-                      size={20}
-                      onPress={() => {
-                        setEditingDate(null);
-                        setEditingField(null);
-                      }}
-                    />
-                  </View>
+                <View style={styles.editRow}>
+                  <TextInput
+                    value={editValue}
+                    onChangeText={setEditValue}
+                    keyboardType="decimal-pad"
+                    mode="outlined"
+                    dense
+                    style={styles.input}
+                    autoFocus
+                    placeholder={label}
+                  />
+                  <IconButton
+                    icon="check"
+                    size={20}
+                    onPress={() => handleSaveData(dateKey, field)}
+                  />
+                  <IconButton
+                    icon="close"
+                    size={20}
+                    onPress={() => {
+                      setEditingDate(null);
+                      setEditingField(null);
+                    }}
+                  />
                 </View>
               );
             }
@@ -242,19 +238,19 @@ export default function WeekDetailScreen() {
             return (
               <TouchableRipple
                 onPress={() => startEditing(dateKey, field, currentValue)}
-                style={styles.fieldTouchable}
+                style={styles.weightInputTouchable}
               >
-                <View style={styles.fieldContainer}>
-                  <Text variant="bodySmall" style={styles.fieldLabel}>
-                    {label}
-                  </Text>
+                <View style={styles.weightInputContainer}>
                   {currentValue !== undefined ? (
-                    <View style={styles.fieldValueRow}>
+                    <>
+                      <Text variant="bodySmall" style={styles.weightInputLabel}>
+                        {label}:
+                      </Text>
                       <Text
-                        variant="titleMedium"
+                        variant="bodyMedium"
                         style={[
-                          styles.fieldValue,
-                          field === "weight" && {
+                          styles.weightInputValue,
+                          {
                             color:
                               currentValue > daily.weight
                                 ? Colors.warning
@@ -264,19 +260,22 @@ export default function WeekDetailScreen() {
                           },
                         ]}
                       >
-                        {currentValue.toFixed(field === "weight" ? 1 : 0)}{" "}
-                        {unit}
+                        {currentValue.toFixed(1)} {unit}
                       </Text>
-                      <IconButton icon="pencil" size={16} />
-                    </View>
+                    </>
                   ) : (
-                    <View style={styles.fieldValueRow}>
-                      <Text variant="bodyMedium" style={styles.noData}>
-                        Tap to add
-                      </Text>
-                      <IconButton icon="plus" size={16} />
-                    </View>
+                    <Text
+                      variant="bodySmall"
+                      style={styles.weightInputPlaceholder}
+                    >
+                      Tap to add weight
+                    </Text>
                   )}
+                  <IconButton
+                    icon={currentValue !== undefined ? "pencil" : "plus"}
+                    size={14}
+                    style={styles.weightInputIcon}
+                  />
                 </View>
               </TouchableRipple>
             );
@@ -338,13 +337,12 @@ export default function WeekDetailScreen() {
                 </View>
 
                 <View style={styles.fieldsGrid}>
-                  {daily.dayName === "Sunday" &&
-                    renderEditableField(
-                      "Weight",
-                      "weight",
-                      dayData?.weight,
-                      "lbs"
-                    )}
+                  {renderEditableField(
+                    "Weight",
+                    "weight",
+                    dayData?.weight,
+                    "lbs"
+                  )}
                 </View>
 
                 {/* Daily Goals Section */}
@@ -504,48 +502,49 @@ const styles = StyleSheet.create({
   fieldsGrid: {
     gap: 12,
   },
-  fieldTouchable: {
+  weightInputTouchable: {
     borderRadius: 8,
     overflow: "hidden",
   },
-  fieldContainer: {
-    backgroundColor: Colors.cardItemBackground,
-    padding: 16,
-    borderRadius: 8,
-  },
-  fieldLabel: {
-    color: Colors.textSecondary,
-    marginBottom: 8,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    fontSize: 10,
-  },
-  fieldValueRow: {
+  weightInputContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    backgroundColor: Colors.cardItemBackground,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    gap: 8,
   },
-  fieldValue: {
+  weightInputLabel: {
+    color: Colors.textSecondary,
+    fontSize: 13,
+  },
+  weightInputValue: {
+    flex: 1,
     fontWeight: "600",
-    color: Colors.textPrimary,
   },
-  noData: {
+  weightInputPlaceholder: {
+    flex: 1,
     color: Colors.textTertiary,
     fontStyle: "italic",
+    fontSize: 13,
   },
-  editContainer: {
-    backgroundColor: Colors.cardItemBackground,
-    padding: 16,
-    borderRadius: 8,
+  weightInputIcon: {
+    margin: 0,
   },
   editRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    backgroundColor: Colors.cardItemBackground,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 8,
   },
   input: {
     flex: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: Colors.background,
+    fontSize: 14,
   },
   goalsHeader: {
     color: Colors.textSecondary,

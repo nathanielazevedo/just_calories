@@ -11,7 +11,10 @@ import {
 } from "react-native-paper";
 import { Colors } from "../constants/colors";
 import { UserData, WeightProjection } from "./types";
-import { getLastWeightForWeek } from "./utils/actual-weights";
+import {
+  getLastWeightForWeek,
+  loadActualWeights,
+} from "./utils/actual-weights";
 import {
   calculateBMR,
   calculateNetCalories,
@@ -29,6 +32,9 @@ export default function HomeScreen() {
   const [actualWeights, setActualWeights] = useState<
     Record<number, number | null>
   >({});
+  const [mostRecentActualWeight, setMostRecentActualWeight] = useState<
+    number | null
+  >(null);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   const loadSavedData = useCallback(async () => {
@@ -46,6 +52,18 @@ export default function HomeScreen() {
         actuals[proj.week] = lastWeight;
       }
       setActualWeights(actuals);
+
+      // Get most recent actual weight entry
+      const allWeights = await loadActualWeights();
+      if (allWeights.length > 0) {
+        const weightsWithValues = allWeights.filter(
+          (w) => w.weight !== undefined
+        );
+        if (weightsWithValues.length > 0) {
+          weightsWithValues.sort((a, b) => b.date.localeCompare(a.date));
+          setMostRecentActualWeight(weightsWithValues[0].weight!);
+        }
+      }
     }
     setLoading(false);
   }, []);
@@ -112,32 +130,54 @@ export default function HomeScreen() {
 
   const bmr = calculateBMR(userData);
   const netCalories = calculateNetCalories(userData);
-  const totalBurned = bmr + userData.caloriesBurnedExercise;
   const poundsPerDay = netCalories / 3500; // Positive net = weight gain, Negative net = weight loss
   const daysPerPound = poundsPerDay !== 0 ? 1 / Math.abs(poundsPerDay) : 0; // Days needed to lose/gain 1 pound
-  const weightDiff = userData.weight - userData.goalWeight;
 
-  // Calculate progress, handling edge cases
-  const totalWeightToLose = Math.abs(
-    userData.weight - (userData.goalWeight || userData.weight)
-  );
-  const progress =
-    totalWeightToLose > 0
-      ? Math.max(0, Math.min(1, 1 - weightDiff / totalWeightToLose))
-      : 0;
-
-  // Calculate total calories to lose and calories burned so far
-  const totalCaloriesToLose = weightDiff * 3500;
+  // Calculate current projected weight based on days since start
   const startDate = parseLocalDate(userData.startDate);
   const millisSinceStart = Math.max(
     0,
     currentTime.getTime() - startDate.getTime()
   );
   const daysSinceStart = millisSinceStart / (1000 * 60 * 60 * 24);
-  const caloriesBurnedSoFar = Math.abs(netCalories) * daysSinceStart;
-  const calorieProgress =
+  const projectedCurrentWeight =
+    userData.weight + poundsPerDay * daysSinceStart;
+
+  // Calculate weight progress (projected)
+  const totalWeightToLose = Math.abs(
+    userData.weight - (userData.goalWeight || userData.weight)
+  );
+  const projectedWeightLost = Math.abs(
+    userData.weight - projectedCurrentWeight
+  );
+  const projectedWeightProgress =
+    totalWeightToLose > 0
+      ? Math.max(0, Math.min(1, projectedWeightLost / totalWeightToLose))
+      : 0;
+
+  // Calculate actual weight progress (if we have actual weight data)
+  const actualWeightLost = mostRecentActualWeight
+    ? Math.abs(userData.weight - mostRecentActualWeight)
+    : 0;
+  const actualWeightProgress =
+    totalWeightToLose > 0 && mostRecentActualWeight
+      ? Math.max(0, Math.min(1, actualWeightLost / totalWeightToLose))
+      : 0;
+
+  // Calculate calorie progress (projected)
+  const weightDiff = userData.weight - userData.goalWeight;
+  const totalCaloriesToLose = weightDiff * 3500;
+  const projectedCaloriesBurned = Math.abs(netCalories) * daysSinceStart;
+  const projectedCalorieProgress =
     totalCaloriesToLose > 0
-      ? Math.max(0, Math.min(1, caloriesBurnedSoFar / totalCaloriesToLose))
+      ? Math.max(0, Math.min(1, projectedCaloriesBurned / totalCaloriesToLose))
+      : 0;
+
+  // Calculate actual calorie progress (based on actual weight lost * 3500)
+  const actualCaloriesBurned = actualWeightLost * 3500;
+  const actualCalorieProgress =
+    totalCaloriesToLose > 0 && mostRecentActualWeight
+      ? Math.max(0, Math.min(1, actualCaloriesBurned / totalCaloriesToLose))
       : 0;
 
   // Calculate expected end date
@@ -211,66 +251,212 @@ export default function HomeScreen() {
               <View style={styles.goalInfoContainer}>
                 <View style={styles.circularProgressRow}>
                   <View style={styles.circularProgressItem}>
-                    <AnimatedCircularProgress
-                      size={120}
-                      width={12}
-                      fill={progress * 100}
-                      tintColor="#6B8E23"
-                      backgroundColor="#C4B5A0"
-                      rotation={0}
-                      lineCap="round"
-                    >
-                      {(fill) => (
-                        <View style={styles.circularProgressCenter}>
-                          <Text
-                            variant="titleMedium"
-                            style={styles.circularProgressText}
-                          >
-                            {(totalWeightToLose - weightDiff).toFixed(1)}
-                          </Text>
-                          <Text
-                            variant="bodySmall"
-                            style={styles.circularProgressSubtext}
-                          >
-                            Weight
-                          </Text>
-                        </View>
+                    <View style={styles.dualProgressContainer}>
+                      {/* Actual progress circle - drawn first (behind) */}
+                      {mostRecentActualWeight && (
+                        <AnimatedCircularProgress
+                          size={120}
+                          width={12}
+                          fill={actualWeightProgress * 100}
+                          tintColor="#6B8E23"
+                          backgroundColor="#C4B5A0"
+                          rotation={0}
+                          lineCap="round"
+                          style={styles.backgroundProgress}
+                        >
+                          {(fill: number) => null}
+                        </AnimatedCircularProgress>
                       )}
-                    </AnimatedCircularProgress>
+                      {/* Projected progress circle - drawn second (on top with partial transparency) */}
+                      <AnimatedCircularProgress
+                        size={120}
+                        width={12}
+                        fill={projectedWeightProgress * 100}
+                        tintColor="rgba(168, 198, 134, 0.7)"
+                        backgroundColor={
+                          mostRecentActualWeight ? "transparent" : "#C4B5A0"
+                        }
+                        rotation={0}
+                        lineCap="round"
+                        style={styles.foregroundProgress}
+                      >
+                        {(fill: number) => (
+                          <View style={styles.circularProgressCenter}>
+                            <Text
+                              variant="titleMedium"
+                              style={styles.circularProgressText}
+                            >
+                              {mostRecentActualWeight
+                                ? actualWeightLost.toFixed(1)
+                                : projectedWeightLost.toFixed(1)}
+                            </Text>
+                            <Text
+                              variant="bodySmall"
+                              style={styles.circularProgressSubtext}
+                            >
+                              Weight
+                            </Text>
+                          </View>
+                        )}
+                      </AnimatedCircularProgress>
+                    </View>
                     <Text variant="bodySmall" style={styles.progressText}>
                       of {totalWeightToLose.toFixed(1)} lbs
                     </Text>
+                    {mostRecentActualWeight && (
+                      <View style={styles.progressValuesRow}>
+                        <View
+                          style={[
+                            styles.progressValueItem,
+                            { backgroundColor: "#A8C686" },
+                          ]}
+                        >
+                          <Text
+                            variant="bodySmall"
+                            style={styles.progressValueText}
+                          >
+                            {projectedWeightLost.toFixed(1)} lbs
+                          </Text>
+                        </View>
+                        <View
+                          style={[
+                            styles.progressValueItem,
+                            { backgroundColor: "#6B8E23" },
+                          ]}
+                        >
+                          <Text
+                            variant="bodySmall"
+                            style={[
+                              styles.progressValueText,
+                              { color: "#FFFFFF" },
+                            ]}
+                          >
+                            {actualWeightLost.toFixed(1)} lbs
+                          </Text>
+                        </View>
+                      </View>
+                    )}
+                    {!mostRecentActualWeight && (
+                      <Text variant="bodySmall" style={styles.progressLegend}>
+                        Projected
+                      </Text>
+                    )}
                   </View>
 
                   <View style={styles.circularProgressItem}>
-                    <AnimatedCircularProgress
-                      size={120}
-                      width={12}
-                      fill={calorieProgress * 100}
-                      tintColor="#6B8E23"
-                      backgroundColor="#C4B5A0"
-                      rotation={0}
-                      lineCap="round"
-                    >
-                      {(fill) => (
-                        <View style={styles.circularProgressCenter}>
-                          <Text
-                            variant="titleMedium"
-                            style={styles.circularProgressText}
-                          >
-                            {caloriesBurnedSoFar.toFixed(2)}
-                          </Text>
-                          <Text
-                            variant="bodySmall"
-                            style={styles.circularProgressSubtext}
-                          >
-                            Calories
-                          </Text>
-                        </View>
+                    <View style={styles.dualProgressContainer}>
+                      {/* Actual calorie progress circle - drawn first (behind) */}
+                      {mostRecentActualWeight && (
+                        <AnimatedCircularProgress
+                          size={120}
+                          width={12}
+                          fill={actualCalorieProgress * 100}
+                          tintColor="#6B8E23"
+                          backgroundColor="#C4B5A0"
+                          rotation={0}
+                          lineCap="round"
+                          style={styles.backgroundProgress}
+                        >
+                          {(fill: number) => null}
+                        </AnimatedCircularProgress>
                       )}
-                    </AnimatedCircularProgress>
+                      {/* Projected calorie progress circle - drawn second (on top with partial transparency) */}
+                      <AnimatedCircularProgress
+                        size={120}
+                        width={12}
+                        fill={projectedCalorieProgress * 100}
+                        tintColor="rgba(168, 198, 134, 0.7)"
+                        backgroundColor={
+                          mostRecentActualWeight ? "transparent" : "#C4B5A0"
+                        }
+                        rotation={0}
+                        lineCap="round"
+                        style={styles.foregroundProgress}
+                      >
+                        {(fill: number) => (
+                          <View style={styles.circularProgressCenter}>
+                            <Text
+                              variant="titleMedium"
+                              style={styles.circularProgressText}
+                            >
+                              {(mostRecentActualWeight
+                                ? actualCaloriesBurned
+                                : projectedCaloriesBurned
+                              ).toFixed(0)}
+                            </Text>
+                            <Text
+                              variant="bodySmall"
+                              style={styles.circularProgressSubtext}
+                            >
+                              Calories
+                            </Text>
+                          </View>
+                        )}
+                      </AnimatedCircularProgress>
+                    </View>
                     <Text variant="bodySmall" style={styles.progressText}>
                       of {totalCaloriesToLose.toFixed(0)}
+                    </Text>
+                    {mostRecentActualWeight && (
+                      <View style={styles.progressValuesRow}>
+                        <View
+                          style={[
+                            styles.progressValueItem,
+                            { backgroundColor: "#A8C686" },
+                          ]}
+                        >
+                          <Text
+                            variant="bodySmall"
+                            style={styles.progressValueText}
+                          >
+                            {projectedCaloriesBurned.toFixed(0)} cals
+                          </Text>
+                        </View>
+                        <View
+                          style={[
+                            styles.progressValueItem,
+                            { backgroundColor: "#6B8E23" },
+                          ]}
+                        >
+                          <Text
+                            variant="bodySmall"
+                            style={[
+                              styles.progressValueText,
+                              { color: "#FFFFFF" },
+                            ]}
+                          >
+                            {actualCaloriesBurned.toFixed(0)} cals
+                          </Text>
+                        </View>
+                      </View>
+                    )}
+                    {!mostRecentActualWeight && (
+                      <Text variant="bodySmall" style={styles.progressLegend}>
+                        Projected
+                      </Text>
+                    )}
+                  </View>
+                </View>
+
+                {/* Legend */}
+                <View style={styles.legendContainer}>
+                  <View style={styles.legendItem}>
+                    <View
+                      style={[
+                        styles.legendDot,
+                        { backgroundColor: "rgba(168, 198, 134, 0.7)" },
+                      ]}
+                    />
+                    <Text variant="bodySmall" style={styles.legendText}>
+                      Projected
+                    </Text>
+                  </View>
+                  <View style={styles.legendItem}>
+                    <View
+                      style={[styles.legendDot, { backgroundColor: "#6B8E23" }]}
+                    />
+                    <Text variant="bodySmall" style={styles.legendText}>
+                      Actual
                     </Text>
                   </View>
                 </View>
@@ -379,7 +565,6 @@ export default function HomeScreen() {
             </Text>
             <View style={styles.timeline}>
               {projections.map((proj, index) => {
-                const change = proj.endWeight - projections[0].startWeight;
                 const actualWeight = actualWeights[proj.week];
 
                 // Get week date range for display
@@ -401,11 +586,6 @@ export default function HomeScreen() {
                   month: "short",
                   day: "numeric",
                 });
-
-                const isOnTrack =
-                  actualWeight !== null && actualWeight !== undefined
-                    ? actualWeight <= proj.endWeight
-                    : null;
 
                 const isCurrentWeek = proj.week === currentWeek;
 
@@ -643,6 +823,67 @@ const styles = StyleSheet.create({
   circularProgressItem: {
     alignItems: "center",
     flex: 1,
+  },
+  dualProgressContainer: {
+    position: "relative",
+    width: 120,
+    height: 120,
+  },
+  backgroundProgress: {
+    position: "absolute",
+  },
+  foregroundProgress: {
+    position: "absolute",
+  },
+  progressLegend: {
+    color: Colors.textTertiary,
+    fontSize: 10,
+    marginTop: 4,
+  },
+  progressValuesRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 8,
+    justifyContent: "center",
+  },
+  progressValueItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+  },
+  progressColorDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  progressValueText: {
+    color: Colors.textSecondary,
+    fontSize: 11,
+  },
+  legendContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 20,
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  legendDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  legendText: {
+    color: Colors.textSecondary,
+    fontSize: 12,
   },
   goalInfoContainer: {
     marginTop: 20,
