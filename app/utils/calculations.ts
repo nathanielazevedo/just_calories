@@ -1,6 +1,15 @@
 import { DailyWeightProjection, UserData, WeightProjection } from '../types';
 
 /**
+ * Parse a date string (YYYY-MM-DD) as a local date, not UTC
+ * This prevents the off-by-one-day issues when displaying dates
+ */
+export function parseLocalDate(dateString: string): Date {
+  const [year, month, day] = dateString.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+/**
  * Calculate Basal Metabolic Rate using Mifflin-St Jeor Equation
  * BMR = (10 × weight in kg) + (6.25 × height in cm) - (5 × age in years) + s
  * where s is +5 for males and -161 for females
@@ -37,7 +46,14 @@ export function projectWeight(userData: UserData): WeightProjection[] {
   const projections: WeightProjection[] = [];
   
   let currentWeight = userData.weight;
-  const startDate = new Date(userData.startDate || new Date().toISOString());
+  // Parse startDate as local date (YYYY-MM-DD)
+  let startDate: Date;
+  if (userData.startDate) {
+    startDate = parseLocalDate(userData.startDate);
+  } else {
+    const now = new Date();
+    startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  }
   
   // Validate date
   if (isNaN(startDate.getTime())) {
@@ -132,12 +148,13 @@ export function projectWeekDaily(userData: UserData, weekNumber: number): DailyW
   const netCaloriesPerDay = calculateNetCalories(userData);
   const projections: DailyWeightProjection[] = [];
   
-  const startDate = new Date(userData.startDate || new Date().toISOString());
+  const startDate = parseLocalDate(userData.startDate || new Date().toISOString().split('T')[0]);
   
   // Validate date
   if (isNaN(startDate.getTime())) {
     console.warn('Invalid start date, using current date');
-    startDate.setTime(new Date().getTime());
+    const now = new Date();
+    startDate.setTime(new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime());
   }
   
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -216,12 +233,13 @@ export function projectWeekDaily(userData: UserData, weekNumber: number): DailyW
  * All subsequent weeks are Monday-Sunday
  */
 export function getWeekDateRange(userData: UserData, weekNumber: number): { startDate: string; endDate: string } {
-  const startDate = new Date(userData.startDate || new Date().toISOString());
+  const startDate = parseLocalDate(userData.startDate || new Date().toISOString().split('T')[0]);
   
   // Validate date
   if (isNaN(startDate.getTime())) {
     console.warn('Invalid start date, using current date');
-    startDate.setTime(new Date().getTime());
+    const now = new Date();
+    startDate.setTime(new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime());
   }
   
   // Helper to get Sunday of the start date's week

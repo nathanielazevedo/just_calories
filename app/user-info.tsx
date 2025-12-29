@@ -99,7 +99,23 @@ export default function UserInfoScreen() {
           onPress: async () => {
             await clearUserData();
             await clearActualWeights();
-            router.replace("/");
+
+            // Reset form to default values
+            const defaultData: UserData = {
+              age: 30,
+              weight: 180,
+              heightFeet: 5,
+              heightInches: 10,
+              gender: "male",
+              caloriesEaten: 2000,
+              caloriesBurnedExercise: 300,
+              startDate: new Date().toISOString().split("T")[0],
+              goalWeight: 170,
+              dailyGoals: [],
+            };
+            setUserData(defaultData);
+            setOriginalUserData(defaultData);
+            setHasUnsavedChanges(false);
           },
         },
       ]

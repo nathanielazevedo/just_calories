@@ -16,6 +16,7 @@ import {
   calculateBMR,
   calculateNetCalories,
   getWeekDateRange,
+  parseLocalDate,
   projectWeight,
 } from "./utils/calculations";
 import { loadUserData } from "./utils/storage";
@@ -127,7 +128,7 @@ export default function HomeScreen() {
 
   // Calculate total calories to lose and calories burned so far
   const totalCaloriesToLose = weightDiff * 3500;
-  const startDate = new Date(userData.startDate);
+  const startDate = parseLocalDate(userData.startDate);
   const millisSinceStart = Math.max(
     0,
     currentTime.getTime() - startDate.getTime()
@@ -173,11 +174,14 @@ export default function HomeScreen() {
               <View style={styles.weightProgressRow}>
                 <View style={styles.weightProgressItem}>
                   <Text variant="bodySmall" style={styles.weightCardLabel}>
-                    {new Date(userData.startDate).toLocaleDateString("en-US", {
-                      month: "numeric",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
+                    {parseLocalDate(userData.startDate).toLocaleDateString(
+                      "en-US",
+                      {
+                        month: "numeric",
+                        day: "numeric",
+                        year: "numeric",
+                      }
+                    )}
                   </Text>
                   <Text variant="headlineMedium" style={styles.weightCardValue}>
                     {userData.weight}
@@ -383,10 +387,10 @@ export default function HomeScreen() {
                   ? getWeekDateRange(userData, proj.week)
                   : null;
                 const startDate = weekRange
-                  ? new Date(weekRange.startDate)
+                  ? parseLocalDate(weekRange.startDate)
                   : new Date(proj.date);
                 const endDate = weekRange
-                  ? new Date(weekRange.endDate)
+                  ? parseLocalDate(weekRange.endDate)
                   : new Date(proj.date);
 
                 const startStr = startDate.toLocaleDateString("en-US", {
