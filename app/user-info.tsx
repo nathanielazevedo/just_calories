@@ -350,6 +350,15 @@ export default function UserInfoScreen() {
 
         <Button
           mode="outlined"
+          onPress={() => router.push("/about")}
+          style={styles.button}
+          contentStyle={{ paddingVertical: 8 }}
+        >
+          About & Privacy
+        </Button>
+
+        <Button
+          mode="outlined"
           onPress={handleClearData}
           style={styles.button}
           contentStyle={{ paddingVertical: 8 }}

@@ -1,4 +1,4 @@
-# Just Calories
+# Ledger
 
 A simple calorie tracking app built with React Native and Expo.
 
@@ -22,4 +22,4 @@ A simple calorie tracking app built with React Native and Expo.
 
 See [BUILD_AND_DEPLOY.md](./BUILD_AND_DEPLOY.md) for build and deployment instructions.
 
-# just_calories
+# ledger

@@ -194,7 +194,9 @@ export default function WeekDetailScreen() {
 
           // Start weight is previous day's end weight (or userData.weight for first day)
           const startWeight =
-            index > 0 ? dailyProjections[index - 1].weight : userData.weight;
+            index > 0
+              ? dailyProjections[index - 1].weight
+              : userData?.weight || daily.weight;
           const endWeight = daily.weight;
 
           const renderEditableField = (
@@ -489,6 +491,10 @@ const styles = StyleSheet.create({
   weightValue: {
     fontWeight: "600",
     marginTop: 2,
+  },
+  fieldLabel: {
+    color: Colors.textSecondary,
+    marginBottom: 4,
   },
   projectedWeight: {
     color: Colors.textSecondary,

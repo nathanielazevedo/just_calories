@@ -66,6 +66,13 @@ export default function RootLayout() {
             headerBackTitle: "Back",
           }}
         />
+        <Stack.Screen
+          name="about"
+          options={{
+            title: "About & Privacy",
+            headerBackTitle: "Back",
+          }}
+        />
       </Stack>
       <StatusBar style="light" />
     </PaperProvider>

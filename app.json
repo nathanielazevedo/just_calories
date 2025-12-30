@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "Just Calories",
-    "slug": "just-calories",
+    "name": "Ledger",
+    "slug": "ledger",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "justcalories",
+    "icon": "./assets/images/logo.png",
+    "scheme": "ledger",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.justcalories.app",
+      "bundleIdentifier": "com.nateazevedo.ledger",
       "buildNumber": "1",
       "infoPlist": {
         "UIBackgroundModes": [],
@@ -19,27 +19,21 @@
       }
     },
     "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#212121",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
-      },
-      "package": "com.justcalories.app",
+      "package": "com.nateazevedo.ledger",
       "versionCode": 1,
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/logo.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/logo.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#212121",

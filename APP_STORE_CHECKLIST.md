@@ -54,27 +54,35 @@ eas build --platform ios
 ## 📝 App Store Connect Setup
 
 ### App Information
-- **App Name**: Just Calories
+- **App Name**: Ledger
 - **Subtitle**: Simple Weight Loss Tracking
 - **Category**: Health & Fitness
-- **Age Rating**: 4+ (No restricted content)
+- **Age Rating**: 12+ (Weight loss/diet content)
 
 ### Description (Suggested)
 ```
-Track your weight loss journey with Just Calories - the simple, no-nonsense calorie tracker.
+Track your weight loss journey with Ledger - simple calorie management that actually works.
 
 FEATURES:
-• Set your weight goals and track progress
-• Calculate your daily BMR automatically
-• Track calories eaten and exercise burned
-• See daily, weekly, and monthly weight loss projections
-• Timeline view of your weekly progress
-• Clean, dark interface optimized for daily use
+• Smart weight projections based on your daily calorie intake
+• Automatic BMR calculation tailored to your body
+• Track calories consumed and burned through exercise
+• Visual progress indicators showing projected vs actual results
+• Daily calorie goals that adapt to your progress
+• Weekly timeline view to see your journey at a glance
+• Clean, intuitive interface designed for daily use
 
-Just Calories focuses on what matters: calories in vs calories out. No subscriptions, no complicated features - just simple weight tracking that works.
+HOW IT WORKS:
+Ledger uses science-backed calculations to project your weight loss based on your calorie deficit. Input your weight, set your goal, and track your daily calories. The app shows you exactly where you're heading and compares it to your actual progress.
 
-PRIVACY:
-All your data is stored locally on your device. We don't collect, store, or share any of your personal information.
+PRIVACY FOCUSED:
+• All data stored locally on your device
+• No account required
+• No data collection or tracking
+• No subscriptions or ads
+• Your information never leaves your phone
+
+Perfect for anyone who wants straightforward weight tracking without the complexity. No meal plans, no social features, no premium upsells - just the tools you need to reach your goals.
 ```
 
 ### Keywords (Suggested)
