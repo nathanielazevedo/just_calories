@@ -1,5 +1,5 @@
 {
-  "buildCommand": "echo 'No build needed'",
-  "outputDirectory": "web",
-  "framework": null
+  "buildCommand": null,
+  "installCommand": null,
+  "outputDirectory": "web"
 }
