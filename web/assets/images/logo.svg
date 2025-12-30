@@ -1,0 +1,31 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="224" fill="#F5F1ED"/>
+
+  <!-- Card -->
+  <rect
+    x="192"
+    y="192"
+    width="640"
+    height="640"
+    rx="120"
+    fill="#FFFFFF"
+    stroke="#E0D5C7"
+    stroke-width="16"
+  />
+
+  <!-- Ledger spine -->
+  <rect
+    x="300"
+    y="312"
+    width="64"
+    height="400"
+    rx="32"
+    fill="#6B8E23"
+  />
+
+  <!-- Entry lines -->
+  <rect x="400" y="350" width="260" height="44" rx="22" fill="#C4B5A0"/>
+  <rect x="400" y="450" width="220" height="44" rx="22" fill="#C4B5A0"/>
+  <rect x="400" y="550" width="180" height="44" rx="22" fill="#C4B5A0"/>
+</svg>
