@@ -47,7 +47,7 @@ export default function RootLayout() {
         <Stack.Screen
           name="index"
           options={{
-            title: "Just Calories",
+            title: "Ledger",
             headerShown: true,
             headerRight: () => <HeaderRight />,
           }}

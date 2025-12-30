@@ -1,6 +1,6 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Image, ScrollView, StyleSheet, View } from "react-native";
 import { AnimatedCircularProgress } from "react-native-circular-progress";
 import {
   ActivityIndicator,
@@ -62,7 +62,11 @@ export default function HomeScreen() {
         if (weightsWithValues.length > 0) {
           weightsWithValues.sort((a, b) => b.date.localeCompare(a.date));
           setMostRecentActualWeight(weightsWithValues[0].weight!);
+        } else {
+          setMostRecentActualWeight(null);
         }
+      } else {
+        setMostRecentActualWeight(null);
       }
     }
     setLoading(false);
@@ -107,22 +111,26 @@ export default function HomeScreen() {
   if (!userData) {
     return (
       <View style={styles.emptyContainer}>
-        <View style={styles.emptyIcon}>
-          <Text style={{ fontSize: 64 }}>📊</Text>
-        </View>
-        <Text variant="displaySmall" style={styles.title}>
-          Just Calories
+        <Image
+          source={require("../assets/images/logo.png")}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <Text variant="headlineLarge" style={styles.appName}>
+          Ledger
         </Text>
         <Text variant="bodyLarge" style={styles.subtitle}>
-          Track your weight journey with daily calorie management
+          Track your weight journey with simple calorie management
         </Text>
         <Button
           mode="contained"
           onPress={() => router.push("/user-info")}
           style={styles.setupButton}
-          contentStyle={{ paddingVertical: 8 }}
+          buttonColor={Colors.primary}
+          textColor="#FFFFFF"
+          contentStyle={{ paddingVertical: 12 }}
         >
-          Set Up Profile
+          Get Started
         </Button>
       </View>
     );
@@ -683,22 +691,30 @@ const styles = StyleSheet.create({
     padding: 32,
     backgroundColor: Colors.background,
   },
-  emptyIcon: {
+  logo: {
+    width: 120,
+    height: 120,
     marginBottom: 24,
+    backgroundColor: "transparent",
+    borderRadius: 235,
+    overflow: "hidden",
   },
-  title: {
-    fontWeight: "bold",
-    marginBottom: 12,
+  appName: {
+    fontWeight: "700",
+    marginBottom: 16,
+    color: Colors.textPrimary,
   },
   subtitle: {
     textAlign: "center",
     color: Colors.textSecondary,
     marginBottom: 32,
     lineHeight: 24,
+    maxWidth: 300,
   },
   setupButton: {
     marginTop: 8,
     borderRadius: 12,
+    minWidth: 200,
   },
   progressCard: {
     marginBottom: 16,
